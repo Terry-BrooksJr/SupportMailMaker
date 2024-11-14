@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SupportMail</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+	<div class="container">
+		<div class="row">
+			<!--         <img src="{% static 'images/img-title-graphic.png' %}" alt="Header Image" class="header-image"> -->
+			<img src="https://learnosity.b-cdn.net/img-title-graphic.png" alt="Header Image" class="header-image">
+			<sub><em>Date Published</em></sub>
+		</div>
+		<div class="row">
+			<p>Welcome to the {{ edition }} edition of SupportMail. For those of you new to this aggregation, SupportMail is an internal email assembled by the Support team to highlight noteworthy tickets, calls, events, etc., that seem likely to be of interest to a larger audience. Inclusions are for information purposes and are not limited to unsolved issues.</p>
+
+			<p>If you think any internal party should be added to this distribution list, please send a request and email address to <a href="mailto:rich.shupe@learnosity.com">Rich Shupe</a>.</p>
+		</div>
+		<div class="row" id="issues">
+			<!--         <img src="{% static 'images/img-title-graphic.png' %}" alt="Header Image" class="header-image"> -->
+			<img src="https://learnosity.b-cdn.net/img-section-header-issues.png" alt="Header Image" class="header-image">
+		</div>
+		<div id="issue-list">
+			<ul class="list">
+				{% for issue in issues %}
+
+				<li><span class="title">{{ issue.item_title }}:</span> {{ issue.item_body</li>
+				
+				{% endfor %}
+					</ul>
+	</div>
+
+
+
+    <div class="row" id="oops">
+        <!--  <img src="{% static 'images/img-title-graphic.png' %}" alt="Header Image" class="header-image"> -->
+        <img src="https://learnosity.b-cdn.net/img-section-header-oops.png" alt="Header Image" class="header-image">
+    </div>
+    <div id="oops-list">
+        <ul class="list">
+            {% for oop in oops %}
+
+            <li><span class="title">{{ oop.item_title }}:</span> {{ oop.item_body</li>
+            
+            {% endfor %}
+                </ul>
+</div>
+
+
+    
+    <div class="row" id="wins">
+        <!--         <img src="{% static 'images/img-title-graphic.png' %}" alt="Header Image" class="header-image"> -->
+        <img src="https://learnosity.b-cdn.net/img-section-header-wins.png" alt="Header Image" class="header-image">
+    </div>
+    <div id="wins-list">
+        <ul class="list">
+            {% for win in wins %}
+
+            <li><span class="title">{{ win.item_title }}:</span> {{ win.item_body</li>
+            
+            {% endfor %}
+                </ul>
+</div>
+
+
+    
+<div class="row" id="news">
+    <!--         <img src="{% static 'images/img-title-graphic.png' %}" alt="Header Image" class="header-image"> -->
+    <img src="https://learnosity.b-cdn.net/img-section-header-news.png" alt="Header Image" class="header-image">
+</div>
+<div id="news-list">
+    <ul class="list">
+        {% for news_item in news %}
+
+        <li><span class="title">{{ news_item.item_title }}:</span> {{ news_item.item_body</li>
+        
+        {% endfor %}
+            </ul>
+</div>
+
+
+
+
+			<img src="https://lh6.googleusercontent.com/UEDAWavK2w-uuNigAPm6s1S5mgeNdQqWsatW7bXvlZLeiUxqdV40_A_XD-ZCJ-ABhJkNiLfSdOzyIe1o_v8xujsKXk3aNyuRXxapHON35bnExoMJ-AVM6xWFFOwglkB1BuqZak" alt="Footer Image" class="footer-image">
+		</div>
+</body>
+
+</html>
