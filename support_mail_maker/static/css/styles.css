@@ -55,4 +55,7 @@ img {
 .row {
 	display: inline-block;
 }
-gh 
+x
+#pub-date {
+	display: flex;
+}

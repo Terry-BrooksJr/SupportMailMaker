@@ -1,0 +1,184 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://learnosity.b-cdn.net/schema/support_mail.schema.json",
+    "title": "Support Mail Content",
+    "description": "Schema for support mail content",
+    "type": "object",
+    "properties": {
+        "publish_date": {
+            "type": "string",
+            "format": "date",
+            "description": "The date the content is to be published"
+        },
+        "content": {
+            "type": "object",
+            "description": "Contents of the Support Mail edition divided into collections of  issues, oops, wins and news",
+            "properties": {
+                "issues": {
+                    "type": "array",
+                    "description": "Container for the approved Items in The 'Issues' category",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "The title of the item"
+                            },
+                            "customer": {
+                                "type": "string",
+                                "description": "The customer associated with the item. "
+                            },
+                            "summary": {
+                                "type": "string",
+                                "description": "A brief summary of the item including key points and reasons for its' addition to SupportMail."
+                            },
+                            "ticket_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "The Zendesk Ticket URL associated with the  item"
+                            },
+                            "item_type": {
+                                "enum": [
+                                    "Issue",
+                                    "Win",
+                                    "Oops",
+                                    "News"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "item_type",
+                            "summary",
+                            "title",
+                            "customer"
+                        ]
+                    }
+                },
+                "oops": {
+                    "type": "array",
+                    "description": "Container for the approved Items in The 'Oops' category",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "The title of the item"
+                            },
+                            "customer": {
+                                "type": "string",
+                                "description": "The customer associated with the item. "
+                            },
+                            "summary": {
+                                "type": "string",
+                                "description": "A brief summary of the item including key points and reasons for its' addition to supporty Mail."
+                            },
+                            "ticket_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "The Zendesk Ticket URL associated with the  item"
+                            },
+                            "item_type": {
+                                "enum": [
+                                    "Issue",
+                                    "Win",
+                                    "Oops",
+                                    "News"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "item_type",
+                            "summary",
+                            "title",
+                            "customer"
+                        ]
+                    }
+                },
+                "wins": {
+                    "type": "array",
+                    "description": "Container for the approved Items in The 'Wins' category",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "The title of the item"
+                            },
+                            "customer": {
+                                "type": "string",
+                                "description": "The customer associated with the item. "
+                            },
+                            "summary": {
+                                "type": "string",
+                                "description": "A brief summary of the item including key points and reasons for its' addition to supporty Mail."
+                            },
+                            "ticket_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "The Zendesk Ticket URL associated with the  item"
+                            },
+                            "item_type": {
+                                "enum": [
+                                    "Issue",
+                                    "Win",
+                                    "Oops",
+                                    "News"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "item_type",
+                            "summary",
+                            "title",
+                            "customer"
+                        ]
+                    }
+                },
+                "news": {
+                    "type": "array",
+                    "description": "Container for the approved Items in The 'News' category",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "The title of the item"
+                            },
+                            "customer": {
+                                "type": "string",
+                                "description": "The customer associated with the item. "
+                            },
+                            "summary": {
+                                "type": "string",
+                                "description": "A brief summary of the item including key points and reasons for its' addition to supporty Mail."
+                            },
+                            "ticket_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "The Zendesk Ticket URL associated with the  item"
+                            },
+                            "item_type": {
+                                "enum": [
+                                    "Issue",
+                                    "Win",
+                                    "Oops",
+                                    "News"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "item_type",
+                            "summary",
+                            "title",
+                            "customer"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "publish_date",
+                "content"
+            ]
+        }
+    }
+}

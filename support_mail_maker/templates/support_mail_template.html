@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SupportMail</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <img src="https://learnosity.b-cdn.net/img-title-graphic.png" alt="Header Image" class="header-image" />
+        <div id="pub-date">
+        <sub><em>Date Published</em></sub>
+        <p>{{ publish_date | date: "l, F m, Y" }}</p>
+        </div>
+      </div>
+      <div class="row">
+        <p>Welcome to the {{ publish_date | date:"F" }} edition of SupportMail. For those of you new to this aggregation, SupportMail is an internal email assembled by the Support team to highlight noteworthy tickets, calls, events, etc., that seem likely to be of interest to a larger audience. Inclusions are for information purposes and are not limited to unsolved issues.</p>
+
+        <p>
+          If you think any internal party should be added to this distribution list, please send a request and email address to <a href="mailto:rich.shupe@learnosity.com">Rich Shupe</a>.
+        </p>
+      </div>`<div class="row" id="issues">
+        <img src="https://learnosity.b-cdn.net/img-section-header-issues.png" alt="Header Image" class="header-image" />
+      </div>
+      {% comment %}Start - Issues Section{% endcomment %}
+      <div>
+        <ul id="issue-list" class="list">
+          {% for issue in issues %}
+            <li class="list-item">
+              <strong>{{ issue.title }}:</strong> {{ issue.body }}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% comment %}End - Issues Section{% endcomment %}
+
+      {% comment %}Start - Ooops Section{% endcomment %}
+      <div class="row" id="oops">
+        <img src="https://learnosity.b-cdn.net/img-section-header-oops.png" alt="Header Image" class="header-image" />
+      </div>
+      <div>
+        <ul id="oops-list" class="list">
+          {% for oop in oops %}
+            <li class="list-item">
+              <strong>{{ oop.title }}:</strong> {{ oop.body }}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% comment %}End - Oops Section{% endcomment %}
+
+      {% comment %}Start - Wins Section{% endcomment %}
+      <div class="row" id="wins">
+        <img src="https://learnosity.b-cdn.net/img-section-header-wins.png" alt="Header Image" class="header-image" />
+      </div>
+      <div>
+        <ul id="wins-list" class="list">
+          {% for win in wins %}
+            <li class="list-item">
+              <strong>{{ win.title }}:</strong> {{ win.body }}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% comment %}End - Wins Section{% endcomment %}
+
+      {% comment %}Start - News Section{% endcomment %}
+      <div class="row" id="news">
+        <img src="https://learnosity.b-cdn.net/img-section-header-news.png" alt="Header Image" class="header-image" />
+      </div>
+      <div>
+        <ul id="news-list" class="list">
+          {% for news_item in news %}
+            <li class="list-item">
+              <strong>{{ news_item.title }}:</strong> {{ news_item.body }}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% comment %}End - News Section{% endcomment %}
+    </div>
+  </body>
+</html>
