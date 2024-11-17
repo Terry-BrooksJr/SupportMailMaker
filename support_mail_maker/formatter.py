@@ -1,9 +1,11 @@
 from django.shortcuts import render
 from django.template.loader import render_to_string
-from typing import Union, Dict, Any, List
+from typing import Union, Dict, Any, List, TextIO
 from datetime import datetime
 import csv
+import pathlib
 import json
+import os
 from utils import valid_JSON_input
 from tqdm import tqdm
 from enum import Enum, property
@@ -20,7 +22,7 @@ class Item:
 
     Args:
         title (str): The title of the item.
-        summary (str): A brief summary of the item.
+        summary (str): A brief                                                            `                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            summary of the item.
         customer (str): The name of the customer associated with the item.
         item_type (str): The type of the item, which must be valid.
         ticket_url (str, optional): An optional URL related to the item.
@@ -116,13 +118,34 @@ class Formatter:
         Allows iteration over Formatter attributes.
         """
         return iter(vars(self))
-    def add_item(self, type, item) -> None:
-        self.context[type].append(item)
+def add_item(self, type:str, item:Item) -> None:
+    """Add an item to the specified type in the context.
+
+    This method appends the given item to the list associated with the specified type in the context dictionary. It allows for dynamic addition of items based on their type.
+
+    Args:
+        type (str): The type under which the item will be added.
+        item (Item): The item to be added to the context.
+
+    Returns:
+        None
+    """
+
 
     def get_items(self, type, /) -> List[Item]:
         return self.context[type]
-    
+     
     def collate_content(self) -> bool:
+        """Organize and categorize content data into specific item types.
+
+        This method processes the content data, creating categorized items based on their type and adding them to the appropriate collections. It provides feedback on the number of items collated and raises an error if an unrecognized item type is encountered.
+
+        Returns:
+            bool: True if the content was successfully collated, otherwise raises an error.
+
+        Raises:
+            RuntimeError: If an error occurs during the collating process or if an unrecognized item type is encountered.
+        """
         try:
             for item in tqdm(self.content_data):
                 classed_item = Item(
@@ -151,11 +174,31 @@ class Formatter:
             raise RuntimeError(str(e)) from e
 
     def is_ready_for_publishing(self) -> bool:
+        """Determine if the content is ready for publishing.
+
+        This method checks if a publish date is set in the context and validates the JSON input. It ensures that the necessary conditions are met before content can be published.
+
+        Returns:
+            bool: True if the content is ready for publishing, otherwise False.
+        """
         if self.context['publish_date'] is not None:
             return valid_JSON_input(self.context)
         return False
     
     def set_raw_content(self, data):
+        """Assign raw content data for further processing.
+
+        This method sets the provided data to the content_data attribute, enabling subsequent operations on the content. It captures any errors that occur during the assignment and raises them as a RuntimeError.
+
+        Args:
+            data (Any): The raw content data to be assigned.
+
+        Returns:
+            None
+
+        Raises:
+            RuntimeError: If an error occurs during the assignment of the content data.
+        """
         try:
             self.content_data = data
         except Exception as e:
@@ -176,6 +219,21 @@ class Formatter:
             self.context['publish_date'] = datetime.strftime(self.publish_date, '%Y-%m-%d')
             self.collate_content()
         return self.context
+    @staticmethod
+    def save_to_file(self, filename:str, content:str, file_ext:str='html') -> str:
+        filename = os.path.join(pathlib.Path.cwd(), f"{filename}.{file_ext}")
+        pathlib.Path.cwd()
+        with open(f"{filename}.{file_ext}", 'w+') as output:
+                output.write
+                return output.read()
+        return None
 
-    def publish(self):
-        return render_to_string('support_mail_template.html', self.context)
+
+
+    def publish(self, include_markdown:bool=False) -> Union[TextIO |Dict[str:TextIO]]:
+        edition  = datetime.strftime(self.publish_date, '%l')
+        publish_year =  datetime.strftime(self.publish_date, '%Y')       
+        root_filename = f"{publish_year}_support_mail_{edition}"
+        html = render_to_string('support_mail_template.html', self.context)
+        return Formatter.save_to_file(root_filename, html)
+   
