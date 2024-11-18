@@ -7,10 +7,12 @@ import sys
 import os
 import pathlib
 import contextlib
+import tempfile
 
 
 support_mail_content_schema = {}
-with open('/home/terry-brooks-jr/Github/SupportMailMaker/support_mail_maker/support_mail.schema.json', 'r') as schema_spec:
+schema_temp = tempfile.TemporaryFile
+with open('support_mail_maker/support_mail.schema.json', 'r') as schema_spec:
     support_mail_content_schema = json.load(schema_spec)
 
 
@@ -22,12 +24,14 @@ def valid_JSON_input(instance:dict, schema=support_mail_content_schema):
         return True
     except ValidationError as e:
         logger.error(f'ERROR: Invalid Schema. Details: {str(e)}')
+    except Exception as e:
+        logger.error(f'ERROR: Unexpected Error. Details: {str(e)}')
 
 
 
 class StreamToLogger:
 
-    def __init__(self, level="INFO"):
+    def __init__(self, level="DEBUG"):
         self._level = level
 
     def write(self, buffer):
@@ -38,17 +42,16 @@ class StreamToLogger:
         pass
 log_file = os.path.join(pathlib.Path.cwd(), 'logs', 'main.log')
 logger.remove()
-logger.add(sys.__stdout__)
-logger.add(sink=sys.stderr, level="WARNING", colorize=True)
-logger.add(sink=log_file, encoding="utf8", level="DEBUG", colorize=True)
-stream = StreamToLogger()
-with contextlib.redirect_stdout(stream):
-    print("Standard output is sent to added handlers.")
 
 def log_warning(message, category, filename, lineno, file=None, line=None):
     logger.warning(f" {message}")
 warnings.filterwarnings(action='ignore', message=r"w+")
 warnings.showwarning = log_warning
-
-logger.add(sink=sys.stderr, level="WARNING", colorize=True)
+stream = StreamToLogger()
 logger.add(sink=log_file, encoding="utf8", level="DEBUG", colorize=True)
+
+with contextlib.redirect_stdout(stream):
+    print("Standard output is sent to added handlers.")
+
+
+

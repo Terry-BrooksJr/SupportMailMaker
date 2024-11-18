@@ -8,9 +8,11 @@ import json
 import os
 from utils import valid_JSON_input
 from tqdm import tqdm
-from enum import Enum, property
+import enum
+from markdownify import markdownify as md
+
 from loguru import logger
-class ItemType(Enum):
+class ItemType(enum.Enum):
     ISSUE = "Issue"
     WIN = "Win"
     Oops = "Oops"
@@ -22,7 +24,7 @@ class Item:
 
     Args:
         title (str): The title of the item.
-        summary (str): A brief                                                            `                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            summary of the item.
+        summary (str): A brief summary of the item.
         customer (str): The name of the customer associated with the item.
         item_type (str): The type of the item, which must be valid.
         ticket_url (str, optional): An optional URL related to the item.
@@ -118,20 +120,21 @@ class Formatter:
         Allows iteration over Formatter attributes.
         """
         return iter(vars(self))
-def add_item(self, type:str, item:Item) -> None:
-    """Add an item to the specified type in the context.
+    
+    def add_item(self, type:str, item:Item) -> None:
+        """Add an item to the specified type in the context.
 
-    This method appends the given item to the list associated with the specified type in the context dictionary. It allows for dynamic addition of items based on their type.
+        This method appends the given item to the list associated with the specified type in the context dictionary. It allows for dynamic addition of items based on their type.
 
-    Args:
-        type (str): The type under which the item will be added.
-        item (Item): The item to be added to the context.
+        Args:
+            type (str): The type under which the item will be added.
+            item (Item): The item to be added to the context.
 
-    Returns:
-        None
-    """
-
-
+        Returns:
+            None
+        """
+        self.context[type].append(item)
+        
     def get_items(self, type, /) -> List[Item]:
         return self.context[type]
      
@@ -173,7 +176,7 @@ def add_item(self, type:str, item:Item) -> None:
         except Exception as e:
             raise RuntimeError(str(e)) from e
 
-    def is_ready_for_publishing(self) -> bool:
+    def initiate_publishing(self) -> bool:
         """Determine if the content is ready for publishing.
 
         This method checks if a publish date is set in the context and validates the JSON input. It ensures that the necessary conditions are met before content can be published.
@@ -181,9 +184,14 @@ def add_item(self, type:str, item:Item) -> None:
         Returns:
             bool: True if the content is ready for publishing, otherwise False.
         """
-        if self.context['publish_date'] is not None:
-            return valid_JSON_input(self.context)
-        return False
+        try:
+            if self.context['publish_date'] is not None:
+                if valid_JSON_input(self.context):
+                    if self.parse_input():
+                        return self.publish()
+        except Exception as e:
+            logger.error(str(e))
+            raise RuntimeError(f'Unable to Publish: {str(e)}')
     
     def set_raw_content(self, data):
         """Assign raw content data for further processing.
@@ -203,37 +211,60 @@ def add_item(self, type:str, item:Item) -> None:
             self.content_data = data
         except Exception as e:
             raise RuntimeError(str(e)) from e
-        
-
+    
     def parse_input(self) -> Dict[str, Union[datetime, List[str]]]:
-        if not isinstance(self.content_data, dict):
-            logger.info('File option selected...Preparing to Open File and Parse to Python Dictonary...')
-            with open(input, 'r') as file:
-                csv_reader = csv.DictReader(file)
-                data = list(csv_reader)
-                self.content_data = json.loads(data)
+        try:
+            if not isinstance(self.content_data, dict):
+                logger.info('File option selected...Preparing to Open File and Parse to Python Dictonary...')
+                with open(input, 'r') as file:
+                    csv_reader = csv.DictReader(file)
+                    data = list(csv_reader)
+                    self.content_data = json.loads(data)
+                    self.context['publish_date'] = datetime.strftime(self.publish_date, '%Y-%m-%d')
+                    self.collate_content()
+            else:
+                self.content_data = json.loads(self.content_data)
                 self.context['publish_date'] = datetime.strftime(self.publish_date, '%Y-%m-%d')
                 self.collate_content()
-        else:
-            self.content_data = json.loads(self.content_data)
-            self.context['publish_date'] = datetime.strftime(self.publish_date, '%Y-%m-%d')
-            self.collate_content()
-        return self.context
+            return True
+        except Exception as e:
+            logger.error(f'Unable to Parse Input: {str(e)}')
+            return False
+    
     @staticmethod
-    def save_to_file(self, filename:str, content:str, file_ext:str='html') -> str:
-        filename = os.path.join(pathlib.Path.cwd(), f"{filename}.{file_ext}")
-        pathlib.Path.cwd()
-        with open(f"{filename}.{file_ext}", 'w+') as output:
-                output.write
-                return output.read()
-        return None
+    def save_to_file(filename: str, content: str, file_ext: str = 'html') -> str:
+        """Save content to a file and return the file path.
+
+        This method saves the given content to a file with the specified filename and extension,
+        and then returns the absolute file path.
+
+        Args:
+            filename (str): The name of the file (without extension) to save.
+            content (str): The content to write into the file.
+            file_ext (str, optional): The file extension. Defaults to 'html'.
+
+        Returns:
+            str: The absolute path to the saved file.
+        """
+        file_path = os.path.join(pathlib.Path.cwd(), f"{filename}.{file_ext}")
+        try:
+            with open(file_path, 'w', encoding='utf-8') as output:
+                output.write(content)
+            return file_path
+        except Exception as e:
+            raise RuntimeError(f"Failed to save file: {e}") from e
 
 
-
-    def publish(self, include_markdown:bool=False) -> Union[TextIO |Dict[str:TextIO]]:
+    def publish(self, include_markdown:bool=False):
         edition  = datetime.strftime(self.publish_date, '%l')
         publish_year =  datetime.strftime(self.publish_date, '%Y')       
         root_filename = f"{publish_year}_support_mail_{edition}"
         html = render_to_string('support_mail_template.html', self.context)
+        if include_markdown:
+            markdown = md(html)
+            return {
+                'html': Formatter.save_to_file(filename=root_filename, content=html),
+                'markdown': Formatter.save_to_file(filename=root_filename, content=markdown, file_ext="md")
+            }
         return Formatter.save_to_file(root_filename, html)
    
