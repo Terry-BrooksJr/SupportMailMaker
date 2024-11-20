@@ -70,7 +70,7 @@
                             },
                             "summary": {
                                 "type": "string",
-                                "description": "A brief summary of the item including key points and reasons for its' addition to supporty Mail."
+                                "description": "A brief summary of the item including key points and reasons for its' addition to support Mail."
                             },
                             "ticket_url": {
                                 "type": "string",
@@ -174,11 +174,11 @@
                         ]
                     }
                 }
-            },
-            "required": [
-                "publish_date",
-                "content"
-            ]
+            }
         }
-    }
+    },
+    "required": [
+        "content",
+        "publish_date"
+    ]
 }

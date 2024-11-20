@@ -1,3 +1,4 @@
+from xml.dom import ValidationErr
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from typing import Union, Dict, Any, List, TextIO
@@ -6,17 +7,44 @@ import csv
 import pathlib
 import json
 import os
+import gradio as gr
+from jsonschema import ValidationError
 from utils import valid_JSON_input
 from tqdm import tqdm
 import enum
 from markdownify import markdownify as md
 
 from loguru import logger
+import django
+from django.conf import settings
+
+settings.configure(
+    TEMPLATES=[
+        {
+            "BACKEND": "django.template.backends.django.DjangoTemplates",
+            "DIRS": ["support_mail_maker/templates"],  # Specify the directory containing your templates
+            "APP_DIRS": False,
+            "OPTIONS": {
+                "context_processors": [
+                    "django.template.context_processors.debug",
+                    "django.template.context_processors.request",
+                    "django.contrib.auth.context_processors.auth",
+                    "django.contrib.messages.context_processors.messages",
+                ],  # Add context processors if needed
+            },
+        },
+    ]
+)
+django.setup()
+
+
 class ItemType(enum.Enum):
     ISSUE = "Issue"
     WIN = "Win"
     Oops = "Oops"
     News = "News"
+
+
 class Item:
     """Represents an item with a title, summary, customer, and type.
 
@@ -32,13 +60,14 @@ class Item:
     Raises:
         ValueError: If the provided item_type is not valid.
     """
+
     def __init__(self, title, summary, customer, item_type, ticket_url=None):
         self.data = {
-            'title': title,
-            'summary': summary,
-            'customer': customer,
-            'item_type': self.validate_item_type(item_type),
-            'ticket_url': ticket_url
+            "title": title,
+            "summary": summary,
+            "customer": customer,
+            "item_type": self.validate_item_type(item_type),
+            "ticket_url": ticket_url,
         }
 
     @staticmethod
@@ -60,7 +89,7 @@ class Item:
         for i_type in ItemType:
             if i_type.value.lower() == item_type.lower():
                 return i_type
-        raise ValueError(f'Invalid Item Type: {item_type}')
+        raise ValueError(f"Invalid Item Type: {item_type}")
 
     def __getitem__(self, key):
         """
@@ -72,7 +101,7 @@ class Item:
         """
         Allows setting attributes using dictionary-like indexing.
         """
-        if key == 'item_type':
+        if key == "item_type":
             value = self.validate_item_type(value)
         self.data[key] = value
 
@@ -87,20 +116,25 @@ class Item:
         Returns a string representation of the item.
         """
         return f"Item({self.data})"
-
+    
+    def in_dict_format(self):
+        return {
+            "title": self.data['title'],
+            "summary": self.data['summary'],
+            "customer": self.data['customer'],
+            "item_type": self.data['item_type'].value,
+            "ticket_url": self.data['ticket_url']
+        }
 class Formatter:
     def __init__(self, publish_date: str):
-        self.publish_date = datetime.strptime(publish_date, '%Y-%m-%d')
-        self.html: str = ''
+        self.publish_date = datetime.strptime(publish_date, "%Y-%m-%d")
+        self.html: str = ""
+        self.markdown:str = " "
+        self.include_markdown: bool = False
         self.content_data: Union[str, Dict[str, Any]] = {}
         self.context: Dict[str, Any] = {
-            'publish_date': None,
-            'content': {
-                'issues': [],
-                'oops': [],
-                'wins': [],
-                'news': []
-            }
+            "publish_date": None,
+            "content": {"issues": [], "oops": [], "wins": [], "news": []},
         }
 
     def __getitem__(self, key):
@@ -120,8 +154,8 @@ class Formatter:
         Allows iteration over Formatter attributes.
         """
         return iter(vars(self))
-    
-    def add_item(self, type:str, item:Item) -> None:
+
+    def add_item(self, type: str, item: Item) -> None:
         """Add an item to the specified type in the context.
 
         This method appends the given item to the list associated with the specified type in the context dictionary. It allows for dynamic addition of items based on their type.
@@ -133,11 +167,11 @@ class Formatter:
         Returns:
             None
         """
-        self.context[type].append(item)
-        
+        self.context['content'][type].append(item.in_dict_format())
+
     def get_items(self, type, /) -> List[Item]:
-        return self.context[type]
-     
+        return self.context['content'][type]
+
     def collate_content(self) -> bool:
         """Organize and categorize content data into specific item types.
 
@@ -152,31 +186,36 @@ class Formatter:
         try:
             for item in tqdm(self.content_data):
                 classed_item = Item(
-                    title=item.title,
-                    customer=item.customer,
-                    item_type=item.type,
-                    ticket_url=item.url
+                    title=item['title'],
+                    summary=item['summary '],
+                    customer=item['customer'],
+                    item_type=item['item_type'],
+                    ticket_url=item['url'],
                 )
-                match classed_item.item_type:
+                match classed_item['item_type']:
                     case ItemType.ISSUE:
-                        self.add_item('issues',classed_item)
+                        self.add_item("issues", classed_item)
                     case ItemType.WIN:
-                        self.add_item('wins',classed_item)
+                        self.add_item("wins", classed_item)
                     case ItemType.Oops:
-                        self.add_item('oops',classed_item)
+                        self.add_item("oops", classed_item)
                     case ItemType.News:
-                        self.add_item('news',classed_item)
+                        self.add_item("news", classed_item)
                     case _:
-                        raise RuntimeError(f'Error: Unable to collate content due to item {classed_item}')
-            logger.success(f"Completed collating content! There are {len(self.get_items('issues'))} issue item(s)",
-                        f"{len(self.get_items('wins'))} win item(s), "
-                        f"{len(self.get_items('oops'))} oops item(s), "
-                        f"{len(self.get_items('news'))} news item(s).")
+                        raise RuntimeError(
+                            f"Error: Unable to collate content due to item {classed_item}"
+                        )
+            logger.success(
+                f"Completed collating content! There are {len(self.get_items('issues'))} issue item(s)",
+                f"{len(self.get_items('wins'))} win item(s), "
+                f"{len(self.get_items('oops'))} oops item(s), "
+                f"{len(self.get_items('news'))} news item(s).",
+            )
             return True
         except Exception as e:
             raise RuntimeError(str(e)) from e
 
-    def initiate_publishing(self) -> bool:
+    def send_to_press(self) -> bool:
         """Determine if the content is ready for publishing.
 
         This method checks if a publish date is set in the context and validates the JSON input. It ensures that the necessary conditions are met before content can be published.
@@ -185,14 +224,17 @@ class Formatter:
             bool: True if the content is ready for publishing, otherwise False.
         """
         try:
-            if self.context['publish_date'] is not None:
-                if valid_JSON_input(self.context):
-                    if self.parse_input():
-                        return self.publish()
+            if self.context["publish_date"] is not None and self.collate_content():
+                try:
+                    valid_JSON_input(self.context)
+                    return self.publish()
+                except ValidationError as ve:
+                    logger.error(str(ve))
+                    raise RuntimeError(str(ve)) from ve
         except Exception as e:
             logger.error(str(e))
-            raise RuntimeError(f'Unable to Publish: {str(e)}')
-    
+            raise RuntimeError(f"Unable to Publish: {str(e)}") from e
+
     def set_raw_content(self, data):
         """Assign raw content data for further processing.
 
@@ -211,28 +253,28 @@ class Formatter:
             self.content_data = data
         except Exception as e:
             raise RuntimeError(str(e)) from e
-    
-    def parse_input(self) -> Dict[str, Union[datetime, List[str]]]:
-        try:
-            if not isinstance(self.content_data, dict):
-                logger.info('File option selected...Preparing to Open File and Parse to Python Dictonary...')
-                with open(input, 'r') as file:
-                    csv_reader = csv.DictReader(file)
-                    data = list(csv_reader)
-                    self.content_data = json.loads(data)
-                    self.context['publish_date'] = datetime.strftime(self.publish_date, '%Y-%m-%d')
-                    self.collate_content()
-            else:
-                self.content_data = json.loads(self.content_data)
-                self.context['publish_date'] = datetime.strftime(self.publish_date, '%Y-%m-%d')
-                self.collate_content()
-            return True
-        except Exception as e:
-            logger.error(f'Unable to Parse Input: {str(e)}')
-            return False
-    
+
+    # def parse_input(self) -> Dict[str, Union[datetime, List[str]]]:
+    #     try:
+    #         if not isinstance(self.content_data, list):
+    #             logger.info(
+    #                 "File option selected...Preparing to Open File and Parse to Python Dictonary..."
+    #             )
+    #             with open(input, "r") as file:
+    #                 csv_reader = csv.DictReader(file)
+    #                 data = list(csv_reader)
+    #                 self.content_data = json.loads(data)
+
+    #                 self.collate_content()
+    #         else:
+    #             self.collate_content()
+    #         return True
+    #     except Exception as e:
+    #         logger.error(f"Unable to Parse Input: {str(e)}")
+    #         return False
+
     @staticmethod
-    def save_to_file(filename: str, content: str, file_ext: str = 'html') -> str:
+    def save_to_file(filename: str, content: str, file_ext: str = "html") -> str:
         """Save content to a file and return the file path.
 
         This method saves the given content to a file with the specified filename and extension,
@@ -248,23 +290,20 @@ class Formatter:
         """
         file_path = os.path.join(pathlib.Path.cwd(), f"{filename}.{file_ext}")
         try:
-            with open(file_path, 'w', encoding='utf-8') as output:
+            with open(file_path, "w", encoding="utf-8") as output:
                 output.write(content)
             return file_path
         except Exception as e:
             raise RuntimeError(f"Failed to save file: {e}") from e
 
-
-    def publish(self, include_markdown:bool=False):
-        edition  = datetime.strftime(self.publish_date, '%l')
-        publish_year =  datetime.strftime(self.publish_date, '%Y')       
+    def publish(self):
+        edition = datetime.strftime(self.publish_date, "%l")
+        publish_year = datetime.strftime(self.publish_date, "%Y")
         root_filename = f"{publish_year}_support_mail_{edition}"
-        html = render_to_string('support_mail_template.html', self.context)
-        if include_markdown:
-            markdown = md(html)
-            return {
-                'html': Formatter.save_to_file(filename=root_filename, content=html),
-                'markdown': Formatter.save_to_file(filename=root_filename, content=markdown, file_ext="md")
-            }
-        return Formatter.save_to_file(root_filename, html)
-   
+        logger.debug(self.context)
+        html = render_to_string("support_mail_template.html", self.context)
+
+        markdown = md(html)
+        return gr.File(value=[ Formatter.save_to_file(filename=root_filename, content=html),Formatter.save_to_file(filename=root_filename, content=markdown, file_ext="md"
+                )], visible=True)
+        # return gr.File(value=Formatter.save_to_file(root_filename, html),visible=True)

@@ -14,7 +14,7 @@
         <img src="https://learnosity.b-cdn.net/img-title-graphic.png" alt="Header Image" class="header-image" />
         <div id="pub-date">
         <sub><em>Date Published</em></sub>
-        <p>{{ publish_date | date: "l, F m, Y" }}</p>
+        <p>{{ publish_date | date:"F j, Y" }}</p>
         </div>
       </div>
       <div class="row">
@@ -29,9 +29,9 @@
       {% comment %}Start - Issues Section{% endcomment %}
       <div>
         <ul id="issue-list" class="list">
-          {% for issue in issues %}
+          {% for issue in content.issues %}
             <li class="list-item">
-              <strong>{{ issue.title }}:</strong> {{ issue.body }}
+              <strong>{{ issue.title }} (<sub><strong>{{ issue.customer }}</strong></sub>):</strong> {{ issue.summary }}<br>
             </li>
           {% endfor %}
         </ul>
@@ -44,9 +44,9 @@
       </div>
       <div>
         <ul id="oops-list" class="list">
-          {% for oop in oops %}
+          {% for oop in content.oops %}
             <li class="list-item">
-              <strong>{{ oop.title }}:</strong> {{ oop.body }}
+              <strong>{{ oop.title }}:</strong> {{ oop.summary }}
             </li>
           {% endfor %}
         </ul>
@@ -59,12 +59,13 @@
       </div>
       <div>
         <ul id="wins-list" class="list">
-          {% for win in wins %}
+          {% for win in content.wins %}
             <li class="list-item">
-              <strong>{{ win.title }}:</strong> {{ win.body }}
+              <strong>{{ win.title }}:</strong> {{ win.summary }}
             </li>
           {% endfor %}
         </ul>
+      </ul>
       </div>
       {% comment %}End - Wins Section{% endcomment %}
 
@@ -74,9 +75,9 @@
       </div>
       <div>
         <ul id="news-list" class="list">
-          {% for news_item in news %}
+          {% for news_item in content.news %}
             <li class="list-item">
-              <strong>{{ news_item.title }}:</strong> {{ news_item.body }}
+              <strong>{{ news_item.title }}:</strong> {{ news_item.summary }}
             </li>
           {% endfor %}
         </ul>
