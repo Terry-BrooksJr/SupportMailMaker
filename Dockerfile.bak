@@ -1,0 +1,46 @@
+FROM python:3.10-slim
+LABEL Maintainer="Terry Brooks, Jr. <terry.Brooks@learnosity.com>"
+LABEL Name="SupportMail Generator"
+LABEL Version="1"
+
+# Set environment vars63
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PYTHONDONTWRITEBYTECODE=-1
+ENV PYTHONUNBUFFERED=1
+ENV GRADIO_SERVER_PORT=7500
+ENV GRADIO_NODE_PATH="/usr/bin/node"
+ENV GRADIO_NUM_PORTS=1000
+ENV GRADIO_NODE_NUM_PORTS=1000
+ENV GRADIO_ANALYTICS_ENABLED=True
+
+# Install necessary dependencies
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN set -e \
+    && apt update \
+    && apt upgrade -y \
+    && apt-get install -y --no-install-recommends \
+    python3-invoke \
+    nodejs \
+    npm \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+    
+EXPOSE 7500
+
+
+RUN groupadd --system supportmail && \
+    useradd -g supportmail supportmailer
+
+COPY requirements.txt  /requirements.txt 
+COPY tasks.py /tasks.py
+# Copy the application code
+
+COPY --chown=supportmail:supportmailer support_mail_maker/ /src/app/
+
+COPY --chown=supportmail:supportmailer logs/ /src/logs/
+    
+RUN --mount=type=cache,target=/root/.cache/pip pip install --no-cache-dir -r ./requirements.txt && rm -rf ./requirements.txt
+RUN chmod -R 777 /src/logs
+RUN chown -R supportmailer /src/logs
+
+CMD "" 

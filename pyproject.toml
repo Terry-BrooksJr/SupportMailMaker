@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "supportmailmaker"
 version = "0.0.0"
-description = "Inteligent Parser and Formatter for Learnsoity SupportMail"
+description = "Intelligent Parser and Formatter for Learnsoity SupportMail"
 authors = ["Terry Arthur Brooks, Jr. <Terry.Arthur@BrooksJr.com>"]
 license = "MIT"
 readme = "README.md"
