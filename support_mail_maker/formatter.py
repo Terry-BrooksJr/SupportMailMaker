@@ -13,7 +13,7 @@ from utils import valid_JSON_input
 from tqdm import tqdm
 import enum
 from markdownify import markdownify as md
-
+import aiofiles
 from loguru import logger
 import django
 from django.conf import settings
@@ -22,15 +22,22 @@ settings.configure(
     TEMPLATES=[
         {
             "BACKEND": "django.template.backends.django.DjangoTemplates",
-            "DIRS": ["support_mail_maker/templates"],  # Specify the directory containing your templates
-            "APP_DIRS": False,
+            "DIRS": [os.environ['SUPPORTMAIL_HTML_TEMPLATE']],  # Template directory
+            "APP_DIRS": False,  # Optimization: Set to False if not using app-level templates
             "OPTIONS": {
                 "context_processors": [
                     "django.template.context_processors.debug",
                     "django.template.context_processors.request",
                     "django.contrib.auth.context_processors.auth",
                     "django.contrib.messages.context_processors.messages",
-                ],  # Add context processors if needed
+                ],
+                # Optimization: Use cached template loader if available
+                'loaders': [
+                    ('django.template.loaders.cached.Loader', [
+                        'django.template.loaders.filesystem.Loader',
+                        'django.template.loaders.app_directories.Loader',
+                    ]),
+                ],
             },
         },
     ]
@@ -126,14 +133,17 @@ class Item:
             "ticket_url": self.data['ticket_url']
         }
 class Formatter:
+    """Formatter class for managing and publishing support mail content.
+
+    This class handles content collation, formatting, and publishing, providing methods for adding items, setting content data, and generating output files.
+    """
     def __init__(self, publish_date: str):
         self.publish_date = datetime.strptime(publish_date, "%Y-%m-%d")
         self.html: str = ""
-        self.markdown:str = " "
-        self.include_markdown: bool = False
+        self.markdown:str = ""
         self.content_data: Union[str, Dict[str, Any]] = {}
         self.context: Dict[str, Any] = {
-            "publish_date": None,
+            "publish_date": self.publish_date.strftime('%m/%d/%Y'),
             "content": {"issues": [], "oops": [], "wins": [], "news": []},
         }
 
@@ -169,10 +179,10 @@ class Formatter:
         """
         self.context['content'][type].append(item.in_dict_format())
 
-    def get_items(self, type, /) -> List[Item]:
+    def get_items(self, type:str, /) -> List[Item]:
         return self.context['content'][type]
 
-    def collate_content(self) -> bool:
+    async def collate_content(self) -> bool:
         """Organize and categorize content data into specific item types.
 
         This method processes the content data, creating categorized items based on their type and adding them to the appropriate collections. It provides feedback on the number of items collated and raises an error if an unrecognized item type is encountered.
@@ -181,41 +191,40 @@ class Formatter:
             bool: True if the content was successfully collated, otherwise raises an error.
 
         Raises:
-            RuntimeError: If an error occurs during the collating process or if an unrecognized item type is encountered.
+            None
         """
         try:
             for item in tqdm(self.content_data):
-                classed_item = Item(
-                    title=item['title'],
-                    summary=item['summary '],
-                    customer=item['customer'],
-                    item_type=item['item_type'],
-                    ticket_url=item['url'],
-                )
-                match classed_item['item_type']:
-                    case ItemType.ISSUE:
-                        self.add_item("issues", classed_item)
-                    case ItemType.WIN:
-                        self.add_item("wins", classed_item)
-                    case ItemType.Oops:
-                        self.add_item("oops", classed_item)
-                    case ItemType.News:
-                        self.add_item("news", classed_item)
-                    case _:
-                        raise RuntimeError(
-                            f"Error: Unable to collate content due to item {classed_item}"
-                        )
-            logger.success(
-                f"Completed collating content! There are {len(self.get_items('issues'))} issue item(s)",
-                f"{len(self.get_items('wins'))} win item(s), "
-                f"{len(self.get_items('oops'))} oops item(s), "
-                f"{len(self.get_items('news'))} news item(s).",
-            )
+                if item['include'] == "✅":
+                    classed_item = Item(
+                        title=item['title'],
+                        summary=item['summary'],
+                        customer=item['customer'],
+                        item_type=item['type'],
+                        ticket_url=item['url'],
+                    )
+                    match classed_item['item_type']:
+                        case ItemType.ISSUE:
+                            self.add_item("issues", classed_item)
+                        case ItemType.WIN:
+                            self.add_item("wins", classed_item)
+                        case ItemType.Oops:
+                            self.add_item("oops", classed_item)
+                        case ItemType.News:
+                            self.add_item("news", classed_item)
+                        case _:
+                            logger.error(
+                                f"Error: Unable to collate content due to item {classed_item}"
+                            )
+            logger.success(f"Completed collating content out of the {len(self.content_data)} items submitted, there are {len(self.get_items('issues'))} issue item(s)")
+            logger.success(f"{len(self.get_items('wins'))} win item(s)")
+            logger.success(f"{len(self.get_items('oops'))} oops item(s)")
+            logger.success(f"{len(self.get_items('news'))} news item(s)")
             return True
         except Exception as e:
-            raise RuntimeError(str(e)) from e
+            logger.error(f'Unable to Collate content: {str(e)}')
 
-    def send_to_press(self) -> bool:
+    async def send_to_press_async(self) -> bool:
         """Determine if the content is ready for publishing.
 
         This method checks if a publish date is set in the context and validates the JSON input. It ensures that the necessary conditions are met before content can be published.
@@ -224,16 +233,24 @@ class Formatter:
             bool: True if the content is ready for publishing, otherwise False.
         """
         try:
-            if self.context["publish_date"] is not None and self.collate_content():
-                try:
-                    valid_JSON_input(self.context)
-                    return self.publish()
-                except ValidationError as ve:
-                    logger.error(str(ve))
-                    raise RuntimeError(str(ve)) from ve
+            # 1) Check if a publish date is set
+            if self.context["publish_date"] is not None:
+                # 2) Properly await collate_content()
+                collate_ok = await self.collate_content()
+                if collate_ok:
+                    try:
+                        # 3) Validate the context JSON
+                        valid_JSON_input(self.context)
+                        # 4) Instead of self.publish(), use your async publish_async
+                        await self.publish_async()
+                        return True
+                    except ValidationError as ve:
+                        logger.error(f"Unable to Publish Due to Validation Failure: {str(ve)}")
+                        return False
+            return False
         except Exception as e:
-            logger.error(str(e))
-            raise RuntimeError(f"Unable to Publish: {str(e)}") from e
+            logger.error(f"Unable to Publish due to General Press Error: {str(e)}")
+            return False
 
     def set_raw_content(self, data):
         """Assign raw content data for further processing.
@@ -252,29 +269,10 @@ class Formatter:
         try:
             self.content_data = data
         except Exception as e:
-            raise RuntimeError(str(e)) from e
-
-    # def parse_input(self) -> Dict[str, Union[datetime, List[str]]]:
-    #     try:
-    #         if not isinstance(self.content_data, list):
-    #             logger.info(
-    #                 "File option selected...Preparing to Open File and Parse to Python Dictonary..."
-    #             )
-    #             with open(input, "r") as file:
-    #                 csv_reader = csv.DictReader(file)
-    #                 data = list(csv_reader)
-    #                 self.content_data = json.loads(data)
-
-    #                 self.collate_content()
-    #         else:
-    #             self.collate_content()
-    #         return True
-    #     except Exception as e:
-    #         logger.error(f"Unable to Parse Input: {str(e)}")
-    #         return False
+            logger.error(f"Unable to Set Raw Content {str(e)}")
 
     @staticmethod
-    def save_to_file(filename: str, content: str, file_ext: str = "html") -> str:
+    async def save_to_file(filename: str, content: str, file_ext: str = "html") -> str:
         """Save content to a file and return the file path.
 
         This method saves the given content to a file with the specified filename and extension,
@@ -290,20 +288,54 @@ class Formatter:
         """
         file_path = os.path.join(pathlib.Path.cwd(), f"{filename}.{file_ext}")
         try:
-            with open(file_path, "w", encoding="utf-8") as output:
-                output.write(content)
+            async with aiofiles.open(file_path, "w", encoding="utf-8") as output:
+                await output.write(content)
             return file_path
         except Exception as e:
-            raise RuntimeError(f"Failed to save file: {e}") from e
+            logger.error(f"Failed to save file: {e}")
 
-    def publish(self):
-        edition = datetime.strftime(self.publish_date, "%l")
-        publish_year = datetime.strftime(self.publish_date, "%Y")
-        root_filename = f"{publish_year}_support_mail_{edition}"
-        logger.debug(self.context)
-        html = render_to_string("support_mail_template.html", self.context)
+    async def publish_async(self):
+        """Publishes the support mail content.
 
-        markdown = md(html)
-        return gr.File(value=[ Formatter.save_to_file(filename=root_filename, content=html),Formatter.save_to_file(filename=root_filename, content=markdown, file_ext="md"
-                )], visible=True)
-        # return gr.File(value=Formatter.save_to_file(root_filename, html),visible=True)
+        This method renders the support mail content using the provided context,
+        converts it to Markdown, and returns it as a downloadable file.
+
+            Args:
+                self (Formatter): The Formatter instance.
+
+            Returns:
+                list: A list containing the generated HTML and Markdown files.
+
+        """
+        try:
+            edition = self.publish_date.strftime("%l")  
+            publish_year = self.publish_date.strftime("%Y") 
+            root_filename = f"{publish_year}_support_mail_{edition}"
+
+            # Render content (assuming render_to_string is async)
+            html = render_to_string("support_mail_template.html", self.context)
+            
+            # Convert to Markdown (assuming md is async—though often md() is sync)
+            markdown =  md(html)
+            
+            # 1) Await saving of files
+            html_path = await self.save_to_file(filename=root_filename, content=html)
+            markdown_path = await self.save_to_file(filename=root_filename, content=markdown, file_ext="md")
+
+            logger.success("HTML & Markdown Files Generated. Please Download them below ⬇️")
+
+            # 2) Return Gradio components referencing the saved files
+            return [
+                gr.File(value=[html_path, markdown_path], visible=True),
+                gr.File(visible=False),
+                gr.Textbox(visible=False)
+            ]
+
+        except Exception as e:
+            logger.error(f"Publishing failed: {e}")
+            return [
+                gr.File(visible=False),
+                gr.File(visible=False),
+                gr.Textbox(
+                    value="Invalid Content File Uploaded. Resetting Press..."
+                )]
