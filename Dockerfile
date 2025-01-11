@@ -23,17 +23,6 @@ ENV GRADIO_SERVER_NAME="0.0.0.0"
 ENV SUPPORTMAIL_HTML_TEMPLATE="/src/templates"
 WORKDIR /src
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
-ARG UID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -e \
         && apt update \
@@ -53,10 +42,9 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install -r requirements.txt
 
 # Switch to the non-privileged user to run the application.
-USER appuser
 
 # Copy the source code into the container.
-COPY --chown=appuser:appuser support_mail_maker/ /src/
+COPY support_mail_maker/ /src/
 
 # Expose the port that the application listens on.
 EXPOSE 7500
