@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SupportMail</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <img src="https://learnosity.b-cdn.net/img-title-graphic.png" alt="Header Image" class="header-image" />
+        <div id="pub-date">
+        <sub><em>Date Published</em></sub>
+        <p></p>
+        </div>
+      </div>
+      <div class="row">
+        <p>Welcome to the  edition of SupportMail. For those of you new to this aggregation, SupportMail is an internal email assembled by the Support team to highlight noteworthy tickets, calls, events, etc., that seem likely to be of interest to a larger audience. Inclusions are for information purposes and are not limited to unsolved issues.</p>
+
+        <p>
+          If you think any internal party should be added to this distribution list, please send a request and email address to <a href="mailto:rich.shupe@learnosity.com">Rich Shupe</a>.
+        </p>
+      </div>`<div class="row" id="issues">
+        <img src="https://learnosity.b-cdn.net/img-section-header-issues.png" alt="Header Image" class="header-image" />
+      </div>
+      
+      <div>
+        <ul id="issue-list" class="list">
+          
+            <li class="list-item">
+              <strong> <sub><strong>(Cengage)</strong></sub>:</strong> Raised questons about Service Level Agreement (SLA) for item bank backup and restoration, specifically the frequency of backups and the expected restore time in case of corruption. Allain Dollete responded by escalating the request to the engineering team for further information. Internally, Rich Shupe highlighted the urgency due to multiple similar requests and noted that currently, there is no established SLA for backup and restoration processes. Discussions are ongoing to determine the feasibility of implementing an SLA, including considerations for backup frequency, restoration procedures, potential costs, and how to handle customer requests effectively. As of now, the ticket remains on hold while the team continues to evaluate and develop a suitable policy to address the backup and restoration needs of clients.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong> <sub><strong>(Learning.com)</strong></sub>:</strong> The “Last Score by Tag by User” report for activity ID 856642DF-2E18-4C6D-A30D-93D344D3A81F failed to display scores for specific users, despite scores being accessible through the Data API. Although similar activities without tags returned scores, this particular one did not, leading to speculation that the report setup might have been affected by an unrelated sidebar display issue.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Content Dupliction/Author API <sub><strong>(Cengage)</strong></sub>:</strong> Cengage requested guidance on duplicating their content to ensure instructors cannot modify original Cengage content. The requirements include shallow copies for activities, deep copies for items, and customized tagging. Due to limitations in the Author API for tagging duplicated content, they proposed using undocumented endpoints to meet these requirements temporarily. Learnosity reviewed and allowed this as an interim solution with conditions: the approach would remain unsupported, subject to changes without notice, and should not influence the priority of new feature requests. Cengage agreed, adding unit tests to mitigate risks. Later, Cengage encountered a replication lag issue when retrieving duplicated items, and Learnosity cautioned against relying on this method long-term due to the inherent risks and unpredictability of undocumented APIs.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Lost Responses/Items API <sub><strong>(Flat World Knowledge)</strong></sub>:</strong> student’s use of the “Check Answer” button caused a question to lock without saving the entered answer, forcing a page reload and resulting in the loss of the response. Assigned ASE investigated and discovered that the student’s response was not saved in the session because the Items API save was not triggered before the page was reloaded. Internal discussions revealed that the client’s custom code for tracking “Check Answer” attempts might not be properly synchronized with session saves, leading to the locked state without preserved answers. Despite extensive testing, the support team was only able to reproduce the issue intermittently, suggesting a possible race condition or conflict with the client’s Angular-based implementation. The ticket remains on hold as the engineering team continues to investigate the root cause and develop a suitable solution.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Math Jax Rendeing/Items API <sub><strong>(Progress Learning)</strong></sub>:</strong> MathJax error (“MathJax retryAfter uncaught in promise”) occurring in the assessment player but not in the question editor while using Learnosity’s Items API version 2023.3.LTS.Assigned ASE investigated the issue by replicating the error and identified that enabling “defer_render” in the configuration caused MathJax to fail when rendering LaTeX symbols in certain questions. Progress Learning indicated that disabling “defer_render” was not a viable option due to the size of their assessments. Despite implementing suggested workarounds, such as adding timeouts and invoking the renderMath() method, the problem persisted, leading to the escalation of the bug to the engineering team. As of November 4, 2024, the issue remains on hold with the engineering team actively working on a fix, which is expected to be released by November 19, 2024.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Gen AI/Author Aide   <sub><strong>(Progress Learning)</strong></sub>:</strong> issues when programmatically placing selected text into the Add source material to cover... text area within the AuthorAide UI of their Office Add-in. Specifically, while the text was successfully inserted, the character count indicator did not update, and the text would disappear upon clicking the “Start Generating” button. Assigned ASE escalated the issue to the product engineering team and requested detailed information about the development environment, including frameworks and libraries used. Progress Learning responded by implementing a workaround that involved adding a newline character (\n) at the end of the selected text, which resolved the issue effectively. The ticket was marked as solved, with Learnosity acknowledging the workaround and noting that alternative solutions might be provided by the engineering team if available.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>iOS Gesture Compatibility/Items API <sub><strong>(Manabie)</strong></sub>:</strong> QR Code capability in Learnosity’s AuthorAide UI. Manabie explained that in their classroom setting, students are not allowed to use mobile phones, necessitating a system where teachers can upload students’ handwritten drawings by scanning student-specific QR codes. Learnosity Support. acknowledged the request and clarified that while a QR Code feature for math question types is under development, it is not currently available for general file uploads. It was proposed raising a feature enhancement request to enable QR Code-triggered uploads for the standard file upload question type, allowing teachers to upload on behalf of students without needing to log in as them. Manabie confirmed the workaround involving adding a newline character was effective and appreciated the support, leading to the ticket being closed with plans to consider the feature for future updates.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Unresponsive/AuthorAide <sub><strong>(Atomic Jolt)</strong></sub>:</strong> AuthorAide UI in the AuthorAPI was unresponsive, with the invocation button hanging and a 500 error occurring at the endpoint https://authoraide-or.learnosity.com/ai-metrics/has-minimum-credit. Learnosity Support econfirmed that the configuration settings were correct and escalated the issue, requesting a HAR file for further investigation. Upon reviewing the HAR file, the support team identified a server-side problem causing the 500 error and addressed it by updating the relevant database. After implementing the fix, Atomic Jolt verified that the AuthorAide was functioning properly. The issue was resolved successfully, and the ticket was closed following Atomic Jolt  confirmation of the solution.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Session Resumption/Items API <sub><strong>(Riverside Insights)</strong></sub>:</strong> After completing an assessment with an enabled Outro page, reloading the page allowed students to resume the assessment and modify their answers despite having already submitted it. Learnosity Support confirmed that this behavior is expected because refreshing the page with the same session_id causes the Items API to resume the session, thereby pre-populating saved responses. They explained that there is no built-in mechanism to prevent re-initializing a submitted session and recommended that Riverside implement client-side safeguards, such as setting flags in their database to mark sessions as submitted and blocking further initialization based on these flags. Riverside acknowledged the guidance and suggested that the documentation should clearly state this behavior to avoid confusion. The ticket was ultimately closed after Learnosity provided comprehensive client education on handling session resumption and affirmed that no server-side changes could prevent this behavior.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Preforemce &amp; Testing/Firehose  <sub><strong>(Cengage)</strong></sub>:</strong> Performance testing using Amazon Kinesis Data Firehose with Learnosity APIs could be conducted in their main AWS region (US East - Virginia) instead of the required US West - California region due to infrastructure limitations. Learnosity Support consulted the platform team and confirmed that performance testing must strictly be performed in the US West - California region, stating that this is a hard limitation applicable to all customers. Cengage acknowledged the response and thanked the support team for the prompt clarification. Michael reiterated the policy and informed Cengage that no exceptions could be made regarding the regional restriction. Consequently, the ticket was marked as “Solved” through client education, providing clear guidance on the regional requirement for performance testing.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Scoring Rendering/Assess API <sub><strong>(Otus)</strong></sub>:</strong> Reported that the score input space was missing for a specific student’s assessment, preventing scores from being added. Learnosity Support reviewed the HAR file and identified that custom JavaScript on Otus’s front-end was likely preventing the rendering of scoring dropdowns for that student. Further investigation revealed a JavaScript parse error caused by a backslash in a graphplotting question’s label, which resulted in an uncaught exception that halted the execution of subsequent code, including MathJax rendering and the scoring UI. The support team replicated the issue locally and confirmed that the invalid input was the root cause, escalating the problem to the engineering team for a permanent fix. Currently, the issue is marked as “On-hold” with ongoing efforts to develop a workaround and improve error handling, while advising Otus’s development team to address the invalid input to prevent similar issues.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>MCQ Limitation/Items API <sub><strong>(College Board)</strong></sub>:</strong> Consistent errors when attempting to trigger rescoring of student sessions due to Firehose messages exceeding AWS&#x27;` SQS queue size limit. Learnosity Support investigated the issue and identified that sessions containing a large number of multiple-choice questions (532 MCQs) were likely causing the messages to surpass the 262,144-byte limit. The support team discussed the potential impact on high-volume assessments, particularly concerning College Board’s SAT-related expansions, and considered whether to increase the message size limit to accommodate such large assessments. VPs of Support and Product highlighted the need to balance supporting large assessments with maintaining performance and reliability, especially for standardized testing preparations. Currently, the ticket remains “Pending” as the team awaits further guidance from Product and Engineering to determine the best course of action and develop an appropriate communication strategy for clients.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Limitation on data table/Items API <sub><strong>(Cengage)</strong></sub>:</strong> Limitations of data table row and column sizes when using Learnosity’s Author API and Items API for complex randomized graph questions. Cengage required support for data tables with up to 400 columns and 100 rows to accommodate advanced graphing features and prevent cheating, exceeding Learnosity’s recommended limits of fewer than 20 columns and 50 rows. Learnosity Support investigated and found that such large data tables drastically increase payload sizes, leading to performance issues and potential memory errors, making them unsustainable. Advised Cengage to conduct internal testing to assess performance impacts and recommended adhering to smaller data table sizes to ensure optimal functionality. The issue was resolved by providing client education on the technical constraints and best practices, thereby marking the ticket as “Solved.”<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Learning Outcome Report/Reports API <sub><strong>(Scholastic Internatonal)</strong></sub>:</strong> issue with the Learning Outcome Report not displaying previous attempts of the same activity by the same user when filtering by date. Scholastic explained that while the latest attempt appears correctly without any filters, applying a date filter causes earlier attempts to be excluded, making it difficult to compare student performance over time. Learnosity Support clarified that the Learning Outcome Report is designed to show only the latest attempt for each item and does not support displaying historical attempts using date filters. They acknowledged the need for tracking multiple attempts and began consulting with their analytics team to explore alternative reporting solutions or approaches that could meet Scholastic’s requirements. The ticket remains “On-hold” as the support team continues to investigate and develop a suitable solution to enable comparison of multiple student attempts in the reports.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Tags/Items API <sub><strong>(Accelerate Learning)</strong></sub>:</strong> Errors encountered when attempting to remove tags from assignments due to empty string tags in the activity data. Learnosity Support identified that several tags contained empty strings, which were causing the API to fail when updating activities. They provided a solution using the Data API to fetch, clean, and update the affected activities by removing the empty tags. Initially, Scholastic reported that only a few activities were affected, but further investigation revealed that over 52,000 activities still had the issue, with new problematic activities being created continuously. Ultimately, Scholastic decided to rewrite their assignment workflow and archive existing problematic activities, leading Learnosity Support to close the ticket as the issue would be addressed internally by the client’s development team.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Programatic Use of AuthorAide w/ Author API/ AuthorAide <sub><strong>(PublishOne)</strong></sub>:</strong> Integrate AuthorAide with Learnosity’s Author API for inserting Desmos graphs and accessing data table variables programmatically. The main issue involved the inability to trigger an API call upon saving a generated item in the AuthorAide UI, as no relevant save event was identifiable. Learnosity Support explored potential solutions such as using MutationObservers and setting up a custom pub/sub event system to access dynamic_content_data from the Author API. On November 6, 2024, Learnosity Support  provided a workaround by configuring the Author API to display item references instead of titles and implementing a MutationObserver to capture save events and retrieve the item reference. The ticket remains “On-hold” with a “Possible Feature Enhancement” outcome, indicating that while a temporary solution was offered, a more integrated and permanent feature may be needed to fully address the client’s requirements.<br>
+            </li>
+          
+            <li class="list-item">
+              <strong>Cross-Platform rendering /Items API <sub><strong>(HMH)</strong></sub>:</strong> Unwanted empty spaces between question items on the Assignment Review Page observed on Windows and iPad Mini Chrome browsers. Learnosity Support requested login credentials to replicate the issue, which were subsequently provided by HMH. Upon investigation, it was discovered that the “enable scrolling for long content” setting in the item layout was causing divs to be sized to the viewport height, resulting in excessive whitespace when the content was not lengthy enough to require scrolling. As a temporary workaround, Support recommended applying specific CSS rules to remove the unnecessary height settings and proposed submitting a feature enhancement to allow bypassing the “enable scrolling for long content” flag when it is not needed. HMH tested the suggested CSS solution, and the ticket remains “On-hold” with a “Possible Feature Enhancement” outcome, awaiting further feedback and a potential permanent fix from the product management team.w<br>
+            </li>
+          
+        </ul>
+      </div>
+      
+
+      
+      <div class="row" id="oops">
+        <img src="https://learnosity.b-cdn.net/img-section-header-oops.png" alt="Header Image" class="header-image" />
+      </div>
+      <div>
+        <ul id="oops-list" class="list">
+          
+        </ul>
+      </div>
+      
+
+      
+      <div class="row" id="wins">
+        <img src="https://learnosity.b-cdn.net/img-section-header-wins.png" alt="Header Image" class="header-image" />
+      </div>
+      <div>
+        <ul id="wins-list" class="list">
+          
+            <li class="list-item">
+              <strong>:</strong> William Griffin provided  a stellar workarounds to address the rendering issues in numberlineplot questions caused by improperly set number_line_margin values. He recommended using the ignore_question_attributes parameter in the Items API initialization to bypass the problematic attribute, ensuring questions rendered with a default margin. Alternatively, he suggested leveraging the Data API to retrieve and update affected questions, either by setting a valid margin value (e.g., &quot;5px&quot;) or removing the attribute altogether. Great Job, Will! 
+            </li>
+          
+        </ul>
+      </ul>
+      </div>
+      
+
+      
+      <div class="row" id="news">
+        <img src="https://learnosity.b-cdn.net/img-section-header-news.png" alt="Header Image" class="header-image" />
+      </div>
+      <div>
+        <ul id="news-list" class="list">
+          
+        </ul>
+      </div>
+      
+    </div>
+  </body>
+</html>

@@ -31,7 +31,7 @@
         <ul id="issue-list" class="list">
           {% for issue in content.issues %}
             <li class="list-item">
-              <strong>{{ issue.title }} (<sub><strong>{{ issue.customer }}</strong></sub>):</strong> {{ issue.summary }}<br>
+              <strong>{{ issue.title }} <sub><strong>({{ issue.customer }})</strong></sub>:</strong> {{ issue.summary }}<br>
             </li>
           {% endfor %}
         </ul>
