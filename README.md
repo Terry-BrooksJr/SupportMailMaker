@@ -91,9 +91,9 @@ SupportMailMaker comes with a pre-configured Docker setup.
    docker build -t supportmailmaker .
    ```
 
-2. **Run the Docker Container:** ***You must publish port 7500m and map it to the host machine***
+2. **Run the Docker Container:** ***You must publish port 7500 and map it to the host machine***
    ```bash
-   docker run -p 7860:7860 supportmailmaker
+   docker run -p 7500:7500 supportmailmaker
    ```
 
 3. Access the Gradio interface at `http://localhost:7500`.
